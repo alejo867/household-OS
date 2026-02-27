@@ -1,0 +1,1099 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f18" />
+  <meta name="description" content="Household OS — shared home dashboard for tasks, receipts, work items, and inventory." />
+  <title>Household OS</title>
+
+  <!-- PWA hook (optional): browsers require a manifest for installability. -->
+  <!-- See MDN installability requirements. -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="favicon.ico" />
+
+  <style>
+    :root{
+      --bg0:#05060a;
+      --bg1:#0b0f18;
+      --glass: rgba(255,255,255,.08);
+      --glass2: rgba(255,255,255,.10);
+      --stroke: rgba(255,255,255,.14);
+      --stroke2: rgba(255,255,255,.22);
+      --shadow: rgba(0,0,0,.45);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.65);
+      --muted2: rgba(255,255,255,.45);
+      --good:#4ade80;
+      --warn:#fbbf24;
+      --bad:#fb7185;
+      --accent:#60a5fa;
+      --accent2:#a78bfa;
+      --radius: 18px;
+      --radius2: 24px;
+      --pad: 14px;
+      --pad2: 18px;
+      --gap: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    * { box-sizing: border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: var(--font);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 20% 10%, rgba(96,165,250,.22), transparent 60%),
+        radial-gradient(1000px 700px at 80% 0%, rgba(167,139,250,.18), transparent 55%),
+        radial-gradient(1200px 900px at 60% 90%, rgba(34,197,94,.10), transparent 60%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
+    }
+
+    /* Top "liquid glass" app bar */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      padding: 14px 16px 10px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      background: color-mix(in srgb, rgba(10,12,18,.65) 75%, transparent);
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      min-width: 220px;
+    }
+    .logo{
+      width:34px; height:34px; border-radius: 12px;
+      background:
+        radial-gradient(12px 12px at 30% 30%, rgba(255,255,255,.55), transparent 70%),
+        linear-gradient(135deg, rgba(96,165,250,.85), rgba(167,139,250,.75));
+      box-shadow: 0 10px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.25);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    .brand h1{
+      margin:0;
+      font-size: 14px;
+      letter-spacing:.2px;
+      font-weight: 700;
+    }
+    .brand .sub{
+      margin-top:2px;
+      font-size: 12px;
+      color: var(--muted2);
+      font-weight: 500;
+    }
+
+    .top-actions{
+      display:flex; align-items:center; gap:10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+
+    .pill{
+      display:flex; align-items:center; gap:8px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+    }
+    .pill input{
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      width: min(42vw, 360px);
+      font-size: 13px;
+    }
+    .pill input::placeholder{ color: rgba(255,255,255,.45); }
+    .btn{
+      appearance:none;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.09);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform .08s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+      box-shadow: 0 12px 26px rgba(0,0,0,.28);
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+      user-select:none;
+    }
+    .btn:hover{ background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.24); }
+    .btn:active{ transform: translateY(1px) scale(.99); box-shadow: 0 10px 22px rgba(0,0,0,.22); }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(96,165,250,.28), rgba(167,139,250,.18));
+      border-color: rgba(96,165,250,.35);
+    }
+    .btn.danger{
+      background: rgba(251,113,133,.12);
+      border-color: rgba(251,113,133,.35);
+    }
+
+    .wrap{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: var(--gap);
+      align-items: stretch;
+      margin-top: 10px;
+    }
+
+    @media (max-width: 980px){
+      .brand{ min-width: auto; }
+      .grid{ grid-template-columns: repeat(6, 1fr); }
+    }
+    @media (max-width: 640px){
+      .pill input{ width: 44vw; }
+      .grid{ grid-template-columns: repeat(1, 1fr); }
+    }
+
+    /* Widget (glass card) */
+    .widget{
+      border-radius: var(--radius2);
+      background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.14);
+      box-shadow:
+        0 26px 60px rgba(0,0,0,.45),
+        inset 0 1px 0 rgba(255,255,255,.12);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+      overflow: hidden;
+      min-height: 220px;
+      position: relative;
+      transform: translateZ(0);
+    }
+
+    .widget::before{
+      content:"";
+      position:absolute; inset: -1px;
+      background:
+        radial-gradient(220px 120px at 20% 0%, rgba(255,255,255,.16), transparent 70%),
+        radial-gradient(220px 120px at 80% 0%, rgba(96,165,250,.12), transparent 75%),
+        radial-gradient(220px 120px at 30% 100%, rgba(167,139,250,.10), transparent 75%);
+      pointer-events:none;
+      opacity:.85;
+    }
+
+    .w-head{
+      position: relative;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    .w-title{
+      display:flex; align-items:center; gap:10px;
+      font-weight: 750;
+      letter-spacing:.2px;
+    }
+    .w-title small{ font-weight: 650; color: rgba(255,255,255,.6); }
+    .drag-handle{
+      display:flex;
+      align-items:center;
+      gap: 6px;
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+      user-select:none;
+      cursor: grab;
+    }
+    .drag-handle:active{ cursor: grabbing; }
+
+    .w-body{
+      position: relative;
+      padding: 14px;
+    }
+
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .row > *{ flex: 1 1 auto; }
+    .input, select, textarea{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(10, 12, 18, .25);
+      color: var(--text);
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    textarea{ min-height: 86px; resize: vertical; }
+
+    .input::placeholder{ color: rgba(255,255,255,.45); }
+
+    .list{
+      margin-top: 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    .item{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+    }
+    .item .left{ display:flex; gap:10px; align-items:flex-start; min-width: 0; }
+    .chk{
+      width: 18px; height: 18px; margin-top: 2px;
+      accent-color: #60a5fa;
+      cursor: pointer;
+    }
+    .meta{ min-width:0; }
+    .meta .t{
+      font-weight: 700;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      max-width: 62ch;
+    }
+    .meta .s{
+      font-size: 12px;
+      color: rgba(255,255,255,.55);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+      max-width: 72ch;
+    }
+    .badges{ display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+    .badge{
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.72);
+    }
+    .badge.good{ border-color: rgba(74,222,128,.35); background: rgba(74,222,128,.12); }
+    .badge.warn{ border-color: rgba(251,191,36,.35); background: rgba(251,191,36,.12); }
+    .badge.bad{  border-color: rgba(251,113,133,.35); background: rgba(251,113,133,.12); }
+
+    .icon{
+      width: 26px; height:26px; border-radius: 10px;
+      display:grid; place-items:center;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .muted{ color: var(--muted2); font-size: 12px; line-height: 1.35; }
+
+    .col-12{ grid-column: span 12; }
+    .col-8{ grid-column: span 8; }
+    .col-6{ grid-column: span 6; }
+    .col-4{ grid-column: span 4; }
+    .col-3{ grid-column: span 3; }
+
+    @media (max-width: 980px){
+      .col-8,.col-6,.col-4,.col-3{ grid-column: span 6; }
+    }
+    @media (max-width: 640px){
+      .col-8,.col-6,.col-4,.col-3{ grid-column: span 1; }
+    }
+
+    .divider{ height:1px; background: rgba(255,255,255,.10); margin: 12px 0; }
+    .tiny{ font-size: 11px; color: rgba(255,255,255,.45); }
+
+    /* Drag UI */
+    .dragging{
+      outline: 2px solid rgba(96,165,250,.40);
+      box-shadow: 0 35px 90px rgba(0,0,0,.55);
+    }
+    .drop-hint{
+      outline: 2px dashed rgba(167,139,250,.45);
+      outline-offset: 6px;
+    }
+
+    /* Reduced transparency accessibility */
+    @media (prefers-reduced-transparency: reduce){
+      .topbar, .widget, .pill, .btn{
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      .widget{
+        background: rgba(18,20,28,.92);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Household OS</h1>
+        <div class="sub">shared dashboard • tasks • receipts • inventory</div>
+      </div>
+    </div>
+
+    <div class="top-actions">
+      <div class="pill" title="Search across tasks, work items, receipts, inventory">
+        <span style="opacity:.7">⌘</span>
+        <input id="globalSearch" placeholder="Search everything…" />
+      </div>
+      <button class="btn primary" id="quickAddBtn">+ Quick Add</button>
+      <button class="btn danger" id="resetBtn" title="Clears local data on this device">Reset</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="muted">
+      Tip: Drag widget headers to reorder. Everything saves locally in this browser (no account needed yet).
+    </div>
+
+    <section class="grid" id="grid">
+      <!-- TO-DOS -->
+      <article class="widget col-6" data-widget="todos">
+        <div class="w-head">
+          <div class="w-title">
+            <span class="icon">✅</span>
+            <div>To‑Dos <small id="todoCount"></small></div>
+          </div>
+          <div class="drag-handle" draggable="true" title="Drag to reorder">⠿ Drag</div>
+        </div>
+        <div class="w-body">
+          <div class="row">
+            <input class="input" id="todoTitle" placeholder="Add a task (e.g., Clean kitchen)" />
+            <select id="todoPriority">
+              <option value="normal">Normal</option>
+              <option value="high">High</option>
+              <option value="low">Low</option>
+            </select>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <input class="input" id="todoTags" placeholder="Tags (comma separated) e.g., chores, upstairs" />
+            <button class="btn" id="addTodoBtn">Add</button>
+          </div>
+          <div class="list" id="todoList"></div>
+        </div>
+      </article>
+
+      <!-- WORK ITEMS -->
+      <article class="widget col-6" data-widget="work">
+        <div class="w-head">
+          <div class="w-title">
+            <span class="icon">🛠️</span>
+            <div>Home Work Items <small id="workCount"></small></div>
+          </div>
+          <div class="drag-handle" draggable="true" title="Drag to reorder">⠿ Drag</div>
+        </div>
+        <div class="w-body">
+          <div class="row">
+            <input class="input" id="workTitle" placeholder="Add a home item (e.g., Fix leaky faucet)" />
+            <select id="workStatus">
+              <option value="NEW">New</option>
+              <option value="PLANNED">Planned</option>
+              <option value="IN_PROGRESS">In Progress</option>
+              <option value="DONE">Done</option>
+            </select>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <input class="input" id="workRoom" placeholder="Room/Area (e.g., Bathroom)" />
+            <button class="btn" id="addWorkBtn">Add</button>
+          </div>
+          <div class="list" id="workList"></div>
+        </div>
+      </article>
+
+      <!-- RECEIPTS -->
+      <article class="widget col-8" data-widget="receipts">
+        <div class="w-head">
+          <div class="w-title">
+            <span class="icon">🧾</span>
+            <div>Receipts <small id="receiptCount"></small></div>
+          </div>
+          <div class="drag-handle" draggable="true" title="Drag to reorder">⠿ Drag</div>
+        </div>
+        <div class="w-body">
+          <div class="row">
+            <input class="input" id="merchant" placeholder="Merchant (e.g., Home Depot)" />
+            <input class="input" id="total" placeholder="Total (e.g., 42.19)" inputmode="decimal" />
+            <select id="category">
+              <option value="Groceries">Groceries</option>
+              <option value="Utilities">Utilities</option>
+              <option value="Home Improvement">Home Improvement</option>
+              <option value="House Supplies">House Supplies</option>
+              <option value="Dining">Dining</option>
+              <option value="Pet">Pet</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <input class="input" id="receiptFile" type="file" accept="image/*" />
+            <button class="btn" id="addReceiptBtn">Save Receipt</button>
+          </div>
+
+          <div class="divider"></div>
+          <div class="row">
+            <div class="muted" id="receiptSummary"></div>
+          </div>
+
+          <div class="list" id="receiptList"></div>
+          <div class="tiny">Note: receipts are stored locally on this device. For shared sync, we’ll add a backend later.</div>
+        </div>
+      </article>
+
+      <!-- INVENTORY -->
+      <article class="widget col-4" data-widget="inventory">
+        <div class="w-head">
+          <div class="w-title">
+            <span class="icon">📦</span>
+            <div>Inventory <small id="invCount"></small></div>
+          </div>
+          <div class="drag-handle" draggable="true" title="Drag to reorder">⠿ Drag</div>
+        </div>
+        <div class="w-body">
+          <div class="row">
+            <input class="input" id="binName" placeholder="New bin (e.g., Garage Bin 3)" />
+            <button class="btn" id="addBinBtn">Add Bin</button>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <select id="binSelect"></select>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <input class="input" id="itemName" placeholder="Add item to selected bin (e.g., HDMI cable)" />
+            <button class="btn" id="addItemBtn">Add</button>
+          </div>
+
+          <div class="divider"></div>
+          <div class="row">
+            <input class="input" id="invSearch" placeholder="Search inventory…" />
+          </div>
+
+          <div class="list" id="invList"></div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <!-- Quick Add modal -->
+  <dialog id="quickAddModal" style="border:none;border-radius:22px;max-width:640px;width:calc(100% - 24px);padding:0;background:transparent;">
+    <div class="widget" style="min-height:auto">
+      <div class="w-head">
+        <div class="w-title"><span class="icon">➕</span><div>Quick Add</div></div>
+        <button class="btn" id="closeModalBtn">Close</button>
+      </div>
+      <div class="w-body">
+        <div class="muted">Choose what to add quickly. This is intentionally simple right now.</div>
+        <div class="divider"></div>
+
+        <div class="row">
+          <button class="btn primary" id="qaTodo">Add To‑Do</button>
+          <button class="btn primary" id="qaWork">Add Work Item</button>
+          <button class="btn primary" id="qaReceipt">Add Receipt</button>
+        </div>
+
+        <div class="divider"></div>
+        <div class="tiny">Later we’ll make this smarter: “type anywhere” → it routes it automatically.</div>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    /**********************
+     * Simple Local Store
+     **********************/
+    const STORE_KEY = "householdOS.v1";
+
+    const nowISO = () => new Date().toISOString();
+    const uid = () => Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORE_KEY);
+        if(!raw) return defaultState();
+        const parsed = JSON.parse(raw);
+        return normalizeState(parsed);
+      }catch(e){
+        console.warn("Failed to load state:", e);
+        return defaultState();
+      }
+    }
+
+    function saveState(){
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    }
+
+    function defaultState(){
+      return {
+        layout: ["todos","work","receipts","inventory"],
+        todos: [],
+        workItems: [],
+        receipts: [],
+        inventory: {
+          bins: [
+            { id: uid(), name: "Starter Bin", items: ["Batteries", "Tape measure"] }
+          ]
+        }
+      };
+    }
+
+    function normalizeState(s){
+      // ensure required fields exist
+      if(!s.layout) s.layout = ["todos","work","receipts","inventory"];
+      if(!Array.isArray(s.todos)) s.todos = [];
+      if(!Array.isArray(s.workItems)) s.workItems = [];
+      if(!Array.isArray(s.receipts)) s.receipts = [];
+      if(!s.inventory) s.inventory = { bins: [] };
+      if(!Array.isArray(s.inventory.bins)) s.inventory.bins = [];
+      return s;
+    }
+
+    let state = loadState();
+
+    /**********************
+     * DOM helpers
+     **********************/
+    const $ = (id) => document.getElementById(id);
+    const escapeHTML = (str) =>
+      String(str ?? "").replace(/[&<>"']/g, (m) => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m]));
+
+    function badgeForPriority(p){
+      if(p === "high") return '<span class="badge bad">High</span>';
+      if(p === "low") return '<span class="badge warn">Low</span>';
+      return '<span class="badge good">Normal</span>';
+    }
+
+    function render(){
+      renderLayout();
+      renderTodos();
+      renderWork();
+      renderReceipts();
+      renderInventory();
+    }
+
+    /**********************
+     * Layout (Drag reorder)
+     **********************/
+    function renderLayout(){
+      const grid = $("grid");
+      const widgets = Array.from(grid.querySelectorAll(".widget"));
+      const map = new Map(widgets.map(w => [w.dataset.widget, w]));
+
+      // reorder DOM based on saved layout
+      state.layout.forEach(key => {
+        const el = map.get(key);
+        if(el) grid.appendChild(el);
+      });
+
+      // drag setup on each widget header
+      grid.querySelectorAll(".widget").forEach(w => {
+        const handle = w.querySelector(".drag-handle");
+        if(!handle) return;
+
+        handle.addEventListener("dragstart", (e) => {
+          w.classList.add("dragging");
+          e.dataTransfer.setData("text/plain", w.dataset.widget);
+          e.dataTransfer.effectAllowed = "move";
+        });
+
+        handle.addEventListener("dragend", () => {
+          w.classList.remove("dragging");
+          grid.querySelectorAll(".widget").forEach(x => x.classList.remove("drop-hint"));
+          saveState();
+        });
+
+        w.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          w.classList.add("drop-hint");
+        });
+
+        w.addEventListener("dragleave", () => w.classList.remove("drop-hint"));
+
+        w.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const fromKey = e.dataTransfer.getData("text/plain");
+          const toKey = w.dataset.widget;
+          if(!fromKey || !toKey || fromKey === toKey) return;
+
+          const fromIdx = state.layout.indexOf(fromKey);
+          const toIdx = state.layout.indexOf(toKey);
+          if(fromIdx < 0 || toIdx < 0) return;
+
+          state.layout.splice(fromIdx, 1);
+          state.layout.splice(toIdx, 0, fromKey);
+          saveState();
+          renderLayout();
+        });
+      });
+    }
+
+    /**********************
+     * To-Dos
+     **********************/
+    function addTodo(){
+      const title = $("todoTitle").value.trim();
+      if(!title) return;
+
+      const priority = $("todoPriority").value;
+      const tags = $("todoTags").value.split(",").map(t => t.trim()).filter(Boolean);
+
+      state.todos.unshift({
+        id: uid(),
+        title,
+        priority,
+        tags,
+        done: false,
+        createdAt: nowISO()
+      });
+
+      $("todoTitle").value = "";
+      $("todoTags").value = "";
+      saveState();
+      renderTodos();
+    }
+
+    function toggleTodo(id, done){
+      const t = state.todos.find(x => x.id === id);
+      if(!t) return;
+      t.done = done;
+      saveState();
+      renderTodos();
+    }
+
+    function removeTodo(id){
+      state.todos = state.todos.filter(x => x.id !== id);
+      saveState();
+      renderTodos();
+    }
+
+    function renderTodos(filterText = ""){
+      const list = $("todoList");
+      const q = filterText.toLowerCase();
+
+      const todos = state.todos.filter(t => {
+        if(!q) return true;
+        const hay = [t.title, ...(t.tags||[])].join(" ").toLowerCase();
+        return hay.includes(q);
+      });
+
+      const open = todos.filter(t => !t.done).length;
+      $("todoCount").textContent = `(${open} open)`;
+
+      list.innerHTML = todos.map(t => {
+        const tags = (t.tags||[]).slice(0,6).map(x => `<span class="badge">${escapeHTML(x)}</span>`).join("");
+        return `
+          <div class="item">
+            <div class="left">
+              <input class="chk" type="checkbox" ${t.done ? "checked" : ""} aria-label="Complete task"
+                onchange="toggleTodo('${t.id}', this.checked)" />
+              <div class="meta">
+                <div class="t" style="${t.done ? "text-decoration:line-through;opacity:.7" : ""}">
+                  ${escapeHTML(t.title)}
+                </div>
+                <div class="badges">
+                  ${badgeForPriority(t.priority)}
+                  ${tags}
+                </div>
+              </div>
+            </div>
+            <button class="btn danger" onclick="removeTodo('${t.id}')" title="Delete">✕</button>
+          </div>
+        `;
+      }).join("");
+
+      if(!todos.length){
+        list.innerHTML = `<div class="muted">No tasks yet. Add one above.</div>`;
+      }
+    }
+
+    /**********************
+     * Work Items
+     **********************/
+    function addWork(){
+      const title = $("workTitle").value.trim();
+      if(!title) return;
+
+      const status = $("workStatus").value;
+      const room = $("workRoom").value.trim();
+
+      state.workItems.unshift({
+        id: uid(),
+        title,
+        status,
+        room,
+        createdAt: nowISO()
+      });
+
+      $("workTitle").value = "";
+      $("workRoom").value = "";
+      saveState();
+      renderWork();
+    }
+
+    function updateWorkStatus(id, status){
+      const w = state.workItems.find(x => x.id === id);
+      if(!w) return;
+      w.status = status;
+      saveState();
+      renderWork();
+    }
+
+    function removeWork(id){
+      state.workItems = state.workItems.filter(x => x.id !== id);
+      saveState();
+      renderWork();
+    }
+
+    function statusBadge(status){
+      if(status === "DONE") return `<span class="badge good">Done</span>`;
+      if(status === "IN_PROGRESS") return `<span class="badge warn">In Progress</span>`;
+      if(status === "PLANNED") return `<span class="badge">Planned</span>`;
+      return `<span class="badge bad">New</span>`;
+    }
+
+    function renderWork(filterText = ""){
+      const list = $("workList");
+      const q = filterText.toLowerCase();
+
+      const work = state.workItems.filter(w => {
+        if(!q) return true;
+        const hay = [w.title, w.room, w.status].join(" ").toLowerCase();
+        return hay.includes(q);
+      });
+
+      const open = work.filter(w => w.status !== "DONE").length;
+      $("workCount").textContent = `(${open} open)`;
+
+      list.innerHTML = work.map(w => `
+        <div class="item">
+          <div class="left">
+            <div class="meta">
+              <div class="t">${escapeHTML(w.title)}</div>
+              <div class="s">${escapeHTML(w.room || "—")} • ${escapeHTML(w.status)}</div>
+              <div class="badges">
+                ${statusBadge(w.status)}
+                ${w.room ? `<span class="badge">${escapeHTML(w.room)}</span>` : ""}
+              </div>
+              <div style="margin-top:8px" class="row">
+                <select onchange="updateWorkStatus('${w.id}', this.value)">
+                  ${["NEW","PLANNED","IN_PROGRESS","DONE"].map(s =>
+                    `<option value="${s}" ${s===w.status?"selected":""}>${s.replace("_"," ")}</option>`
+                  ).join("")}
+                </select>
+              </div>
+            </div>
+          </div>
+          <button class="btn danger" onclick="removeWork('${w.id}')" title="Delete">✕</button>
+        </div>
+      `).join("");
+
+      if(!work.length){
+        list.innerHTML = `<div class="muted">No work items yet. Add one above.</div>`;
+      }
+    }
+
+    /**********************
+     * Receipts (stored locally)
+     * We store image as a data URL (base64).
+     * For lots of receipts, this can grow localStorage quickly.
+     **********************/
+    function addReceipt(){
+      const merchant = $("merchant").value.trim();
+      const totalRaw = $("total").value.trim();
+      const category = $("category").value;
+      const file = $("receiptFile").files[0];
+
+      const total = parseFloat(totalRaw);
+      if(!merchant || Number.isNaN(total)){
+        alert("Please enter Merchant and a valid Total.");
+        return;
+      }
+
+      const receipt = {
+        id: uid(),
+        merchant,
+        total: Math.round(total * 100) / 100,
+        category,
+        createdAt: nowISO(),
+        imageDataUrl: null
+      };
+
+      if(!file){
+        state.receipts.unshift(receipt);
+        $("merchant").value = "";
+        $("total").value = "";
+        $("receiptFile").value = "";
+        saveState();
+        renderReceipts();
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        receipt.imageDataUrl = reader.result;
+        state.receipts.unshift(receipt);
+        $("merchant").value = "";
+        $("total").value = "";
+        $("receiptFile").value = "";
+        saveState();
+        renderReceipts();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeReceipt(id){
+      state.receipts = state.receipts.filter(r => r.id !== id);
+      saveState();
+      renderReceipts();
+    }
+
+    function renderReceipts(filterText = ""){
+      const list = $("receiptList");
+      const q = filterText.toLowerCase();
+
+      const receipts = state.receipts.filter(r => {
+        if(!q) return true;
+        const hay = [r.merchant, r.category, String(r.total)].join(" ").toLowerCase();
+        return hay.includes(q);
+      });
+
+      $("receiptCount").textContent = `(${receipts.length})`;
+
+      // summary by category (top few)
+      const totals = {};
+      for(const r of state.receipts){
+        totals[r.category] = (totals[r.category] || 0) + (Number(r.total) || 0);
+      }
+      const top = Object.entries(totals)
+        .sort((a,b)=>b[1]-a[1])
+        .slice(0,4)
+        .map(([k,v]) => `${k}: $${v.toFixed(2)}`)
+        .join(" • ");
+      $("receiptSummary").textContent = top ? `Top categories: ${top}` : "No receipt totals yet.";
+
+      list.innerHTML = receipts.map(r => {
+        const img = r.imageDataUrl ? `<img alt="Receipt" src="${r.imageDataUrl}" style="width:72px;height:72px;border-radius:16px;object-fit:cover;border:1px solid rgba(255,255,255,.14)"/>` : "";
+        return `
+          <div class="item">
+            <div class="left">
+              ${img}
+              <div class="meta">
+                <div class="t">${escapeHTML(r.merchant)} — $${Number(r.total).toFixed(2)}</div>
+                <div class="s">${escapeHTML(r.category)} • ${new Date(r.createdAt).toLocaleString()}</div>
+                <div class="badges">
+                  <span class="badge good">${escapeHTML(r.category)}</span>
+                </div>
+              </div>
+            </div>
+            <button class="btn danger" onclick="removeReceipt('${r.id}')" title="Delete">✕</button>
+          </div>
+        `;
+      }).join("");
+
+      if(!receipts.length){
+        list.innerHTML = `<div class="muted">No receipts yet. Add one above (optional image).</div>`;
+      }
+    }
+
+    /**********************
+     * Inventory
+     **********************/
+    function addBin(){
+      const name = $("binName").value.trim();
+      if(!name) return;
+      state.inventory.bins.push({ id: uid(), name, items: [] });
+      $("binName").value = "";
+      saveState();
+      renderInventory();
+    }
+
+    function addItem(){
+      const item = $("itemName").value.trim();
+      const binId = $("binSelect").value;
+      if(!item || !binId) return;
+
+      const bin = state.inventory.bins.find(b => b.id === binId);
+      if(!bin) return;
+
+      bin.items.unshift(item);
+      $("itemName").value = "";
+      saveState();
+      renderInventory();
+    }
+
+    function removeInvItem(binId, idx){
+      const bin = state.inventory.bins.find(b => b.id === binId);
+      if(!bin) return;
+      bin.items.splice(idx, 1);
+      saveState();
+      renderInventory();
+    }
+
+    function renderInventory(filterText = ""){
+      const bins = state.inventory.bins;
+      $("invCount").textContent = `(${bins.reduce((n,b)=>n+b.items.length,0)} items)`;
+
+      // populate select
+      const sel = $("binSelect");
+      const current = sel.value;
+      sel.innerHTML = bins.map(b => `<option value="${b.id}">${escapeHTML(b.name)} (${b.items.length})</option>`).join("");
+      if(current && bins.some(b => b.id === current)) sel.value = current;
+
+      const binId = sel.value || (bins[0] && bins[0].id);
+      if(!sel.value && binId) sel.value = binId;
+
+      const q = (filterText || $("invSearch").value || "").toLowerCase();
+      const list = $("invList");
+
+      if(!binId){
+        list.innerHTML = `<div class="muted">No bins yet. Add one above.</div>`;
+        return;
+      }
+
+      const bin = bins.find(b => b.id === binId);
+      if(!bin){
+        list.innerHTML = `<div class="muted">Select a bin to view items.</div>`;
+        return;
+      }
+
+      const items = (bin.items || []).map((name, idx) => ({ name, idx }))
+        .filter(x => !q || x.name.toLowerCase().includes(q));
+
+      list.innerHTML = `
+        <div class="muted">Viewing: <b>${escapeHTML(bin.name)}</b></div>
+        ${items.map(x => `
+          <div class="item">
+            <div class="left">
+              <div class="meta">
+                <div class="t">${escapeHTML(x.name)}</div>
+                <div class="s">Bin: ${escapeHTML(bin.name)}</div>
+              </div>
+            </div>
+            <button class="btn danger" onclick="removeInvItem('${bin.id}', ${x.idx})" title="Remove">✕</button>
+          </div>
+        `).join("")}
+      `;
+
+      if(!items.length){
+        list.innerHTML = `<div class="muted">No matching items in this bin.</div>`;
+      }
+    }
+
+    /**********************
+     * Global Search
+     **********************/
+    function applyGlobalSearch(){
+      const q = $("globalSearch").value.trim();
+      renderTodos(q);
+      renderWork(q);
+      renderReceipts(q);
+      renderInventory(q);
+    }
+
+    /**********************
+     * Reset
+     **********************/
+    function resetAll(){
+      const ok = confirm("Reset local data on this device? This cannot be undone.");
+      if(!ok) return;
+      localStorage.removeItem(STORE_KEY);
+      state = defaultState();
+      saveState();
+      render();
+    }
+
+    /**********************
+     * Quick Add Modal
+     **********************/
+    function openQuickAdd(){
+      $("quickAddModal").showModal();
+    }
+    function closeQuickAdd(){
+      $("quickAddModal").close();
+    }
+
+    /**********************
+     * Wire up events
+     **********************/
+    window.toggleTodo = toggleTodo;
+    window.removeTodo = removeTodo;
+    window.updateWorkStatus = updateWorkStatus;
+    window.removeWork = removeWork;
+    window.removeReceipt = removeReceipt;
+    window.removeInvItem = removeInvItem;
+
+    $("addTodoBtn").addEventListener("click", addTodo);
+    $("todoTitle").addEventListener("keydown", (e)=>{ if(e.key==="Enter") addTodo(); });
+
+    $("addWorkBtn").addEventListener("click", addWork);
+    $("workTitle").addEventListener("keydown", (e)=>{ if(e.key==="Enter") addWork(); });
+
+    $("addReceiptBtn").addEventListener("click", addReceipt);
+
+    $("addBinBtn").addEventListener("click", addBin);
+    $("addItemBtn").addEventListener("click", addItem);
+    $("binSelect").addEventListener("change", ()=>renderInventory());
+    $("invSearch").addEventListener("input", ()=>renderInventory());
+
+    $("globalSearch").addEventListener("input", applyGlobalSearch);
+
+    $("quickAddBtn").addEventListener("click", openQuickAdd);
+    $("closeModalBtn").addEventListener("click", closeQuickAdd);
+    $("quickAddModal").addEventListener("click", (e)=>{
+      // click outside content closes
+      const rect = e.target.getBoundingClientRect?.();
+      if(e.target === $("quickAddModal")) closeQuickAdd();
+    });
+
+    $("qaTodo").addEventListener("click", ()=>{
+      closeQuickAdd();
+      $("todoTitle").focus();
+    });
+    $("qaWork").addEventListener("click", ()=>{
+      closeQuickAdd();
+      $("workTitle").focus();
+    });
+    $("qaReceipt").addEventListener("click", ()=>{
+      closeQuickAdd();
+      $("merchant").focus();
+    });
+
+    $("resetBtn").addEventListener("click", resetAll);
+
+    // initial render
+    render();
+
+    /**********************
+     * Service worker registration (optional).
+     * For PWA installability, browsers require a manifest file;
+     * SW often used for offline/caching patterns.
+     **********************/
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {
+          // ignore if sw.js doesn't exist yet
+        });
+      });
+    }
+  </script>
+</body>
+</html>
