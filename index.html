@@ -7,10 +7,10 @@
   <meta name="description" content="Household OS — shared home dashboard for tasks, receipts, work items, and inventory." />
   <title>Household OS</title>
 
-  <!-- PWA hook (optional): browsers require a manifest for installability. -->
-  <!-- See MDN installability requirements. -->
-  <link rel="manifest" href="manifest.webmanifest" />
-  <link rel="icon" href="favicon.ico" />
+  <!-- Optional PWA files (add later if you want installability):
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./favicon.ico">
+  -->
 
   <style>
     :root{
@@ -51,7 +51,6 @@
       overflow-x:hidden;
     }
 
-    /* Top "liquid glass" app bar */
     .topbar{
       position: sticky;
       top: 0;
@@ -116,6 +115,7 @@
       font-size: 13px;
     }
     .pill input::placeholder{ color: rgba(255,255,255,.45); }
+
     .btn{
       appearance:none;
       border: 1px solid rgba(255,255,255,.16);
@@ -131,6 +131,7 @@
       backdrop-filter: blur(16px) saturate(160%);
       -webkit-backdrop-filter: blur(16px) saturate(160%);
       user-select:none;
+      white-space: nowrap;
     }
     .btn:hover{ background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.24); }
     .btn:active{ transform: translateY(1px) scale(.99); box-shadow: 0 10px 22px rgba(0,0,0,.22); }
@@ -166,7 +167,6 @@
       .grid{ grid-template-columns: repeat(1, 1fr); }
     }
 
-    /* Widget (glass card) */
     .widget{
       border-radius: var(--radius2);
       background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.06));
@@ -225,6 +225,7 @@
 
     .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .row > *{ flex: 1 1 auto; }
+
     .input, select, textarea{
       width:100%;
       padding: 10px 12px;
@@ -236,7 +237,6 @@
       box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
     }
     textarea{ min-height: 86px; resize: vertical; }
-
     .input::placeholder{ color: rgba(255,255,255,.45); }
 
     .list{
@@ -291,6 +291,8 @@
     .badge.good{ border-color: rgba(74,222,128,.35); background: rgba(74,222,128,.12); }
     .badge.warn{ border-color: rgba(251,191,36,.35); background: rgba(251,191,36,.12); }
     .badge.bad{  border-color: rgba(251,113,133,.35); background: rgba(251,113,133,.12); }
+    .badge.blue{ border-color: rgba(96,165,250,.35); background: rgba(96,165,250,.12); }
+    .badge.purple{ border-color: rgba(167,139,250,.35); background: rgba(167,139,250,.12); }
 
     .icon{
       width: 26px; height:26px; border-radius: 10px;
@@ -317,7 +319,6 @@
     .divider{ height:1px; background: rgba(255,255,255,.10); margin: 12px 0; }
     .tiny{ font-size: 11px; color: rgba(255,255,255,.45); }
 
-    /* Drag UI */
     .dragging{
       outline: 2px solid rgba(96,165,250,.40);
       box-shadow: 0 35px 90px rgba(0,0,0,.55);
@@ -327,15 +328,18 @@
       outline-offset: 6px;
     }
 
-    /* Reduced transparency accessibility */
+    dialog::backdrop{
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
     @media (prefers-reduced-transparency: reduce){
       .topbar, .widget, .pill, .btn{
         backdrop-filter: none !important;
         -webkit-backdrop-filter: none !important;
       }
-      .widget{
-        background: rgba(18,20,28,.92);
-      }
+      .widget{ background: rgba(18,20,28,.92); }
     }
   </style>
 </head>
@@ -346,7 +350,7 @@
       <div class="logo" aria-hidden="true"></div>
       <div>
         <h1>Household OS</h1>
-        <div class="sub">shared dashboard • tasks • receipts • inventory</div>
+        <div class="sub">Alejo + Lina • tasks • receipts • inventory</div>
       </div>
     </div>
 
@@ -356,7 +360,10 @@
         <input id="globalSearch" placeholder="Search everything…" />
       </div>
       <button class="btn primary" id="quickAddBtn">+ Quick Add</button>
+      <button class="btn" id="backupBtn">Backup</button>
+      <button class="btn" id="restoreBtn">Restore</button>
       <button class="btn danger" id="resetBtn" title="Clears local data on this device">Reset</button>
+      <input id="restoreFile" type="file" accept="application/json" style="display:none" />
     </div>
   </header>
 
@@ -366,29 +373,47 @@
     </div>
 
     <section class="grid" id="grid">
-      <!-- TO-DOS -->
+      <!-- TO-DOS / CHORES -->
       <article class="widget col-6" data-widget="todos">
         <div class="w-head">
           <div class="w-title">
             <span class="icon">✅</span>
-            <div>To‑Dos <small id="todoCount"></small></div>
+            <div>To‑Dos & Chores <small id="todoCount"></small></div>
           </div>
           <div class="drag-handle" draggable="true" title="Drag to reorder">⠿ Drag</div>
         </div>
         <div class="w-body">
           <div class="row">
             <input class="input" id="todoTitle" placeholder="Add a task (e.g., Clean kitchen)" />
+            <select id="todoAssignee" title="Assign to">
+              <option value="Alejo">Alejo</option>
+              <option value="Lina">Lina</option>
+              <option value="Both">Both</option>
+            </select>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <input class="input" id="todoDue" type="date" title="Due date" />
+            <select id="todoRecurrence" title="Recurrence">
+              <option value="none">No recurrence</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
+          </div>
+
+          <div class="row" style="margin-top:10px">
             <select id="todoPriority">
               <option value="normal">Normal</option>
               <option value="high">High</option>
               <option value="low">Low</option>
             </select>
-          </div>
-          <div class="row" style="margin-top:10px">
             <input class="input" id="todoTags" placeholder="Tags (comma separated) e.g., chores, upstairs" />
             <button class="btn" id="addTodoBtn">Add</button>
           </div>
+
           <div class="list" id="todoList"></div>
+          <div class="tiny">Recurring chores: when you complete one, the next one auto-appears with the next due date.</div>
         </div>
       </article>
 
@@ -404,6 +429,15 @@
         <div class="w-body">
           <div class="row">
             <input class="input" id="workTitle" placeholder="Add a home item (e.g., Fix leaky faucet)" />
+            <select id="workAssignee" title="Assign to">
+              <option value="Alejo">Alejo</option>
+              <option value="Lina">Lina</option>
+              <option value="Both">Both</option>
+            </select>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <input class="input" id="workDue" type="date" title="Target date" />
             <select id="workStatus">
               <option value="NEW">New</option>
               <option value="PLANNED">Planned</option>
@@ -411,10 +445,12 @@
               <option value="DONE">Done</option>
             </select>
           </div>
+
           <div class="row" style="margin-top:10px">
             <input class="input" id="workRoom" placeholder="Room/Area (e.g., Bathroom)" />
             <button class="btn" id="addWorkBtn">Add</button>
           </div>
+
           <div class="list" id="workList"></div>
         </div>
       </article>
@@ -444,6 +480,12 @@
           </div>
 
           <div class="row" style="margin-top:10px">
+            <select id="receiptPaidBy" title="Paid by">
+              <option value="Alejo">Paid by Alejo</option>
+              <option value="Lina">Paid by Lina</option>
+              <option value="Both">Paid by Both</option>
+            </select>
+            <input class="input" id="receiptDate" type="date" title="Purchase date" />
             <input class="input" id="receiptFile" type="file" accept="image/*" />
             <button class="btn" id="addReceiptBtn">Save Receipt</button>
           </div>
@@ -494,33 +536,53 @@
   </main>
 
   <!-- Quick Add modal -->
-  <dialog id="quickAddModal" style="border:none;border-radius:22px;max-width:640px;width:calc(100% - 24px);padding:0;background:transparent;">
+  <dialog id="quickAddModal" style="border:none;border-radius:22px;max-width:720px;width:calc(100% - 24px);padding:0;background:transparent;">
     <div class="widget" style="min-height:auto">
       <div class="w-head">
         <div class="w-title"><span class="icon">➕</span><div>Quick Add</div></div>
         <button class="btn" id="closeModalBtn">Close</button>
       </div>
       <div class="w-body">
-        <div class="muted">Choose what to add quickly. This is intentionally simple right now.</div>
+        <div class="muted">Type once, choose what it is. Fast capture.</div>
         <div class="divider"></div>
 
         <div class="row">
-          <button class="btn primary" id="qaTodo">Add To‑Do</button>
-          <button class="btn primary" id="qaWork">Add Work Item</button>
-          <button class="btn primary" id="qaReceipt">Add Receipt</button>
+          <input class="input" id="qaTitle" placeholder="What do you want to add?" />
+          <select id="qaAssignee">
+            <option value="Alejo">Alejo</option>
+            <option value="Lina">Lina</option>
+            <option value="Both">Both</option>
+          </select>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <input class="input" id="qaDue" type="date" />
+          <select id="qaRecurrence">
+            <option value="none">No recurrence</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" id="qaTodo">Save as To‑Do/Chore</button>
+          <button class="btn primary" id="qaWork">Save as Work Item</button>
+          <button class="btn primary" id="qaReceipt">Jump to Receipts</button>
         </div>
 
         <div class="divider"></div>
-        <div class="tiny">Later we’ll make this smarter: “type anywhere” → it routes it automatically.</div>
+        <div class="tiny">Tip: use recurrence for chores (trash, vacuum, etc.).</div>
       </div>
     </div>
   </dialog>
 
   <script>
     /**********************
-     * Simple Local Store
+     * Local Store
      **********************/
-    const STORE_KEY = "householdOS.v1";
+    const STORE_KEY = "householdOS.v2";
+    const APP_VERSION = 2;
 
     const nowISO = () => new Date().toISOString();
     const uid = () => Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
@@ -538,11 +600,13 @@
     }
 
     function saveState(){
+      state.meta.updatedAt = nowISO();
       localStorage.setItem(STORE_KEY, JSON.stringify(state));
     }
 
     function defaultState(){
       return {
+        meta: { version: APP_VERSION, createdAt: nowISO(), updatedAt: nowISO() },
         layout: ["todos","work","receipts","inventory"],
         todos: [],
         workItems: [],
@@ -556,7 +620,7 @@
     }
 
     function normalizeState(s){
-      // ensure required fields exist
+      if(!s.meta) s.meta = { version: APP_VERSION, createdAt: nowISO(), updatedAt: nowISO() };
       if(!s.layout) s.layout = ["todos","work","receipts","inventory"];
       if(!Array.isArray(s.todos)) s.todos = [];
       if(!Array.isArray(s.workItems)) s.workItems = [];
@@ -569,6 +633,62 @@
     let state = loadState();
 
     /**********************
+     * Date helpers
+     **********************/
+    function parseDateInput(value){
+      // value is "YYYY-MM-DD" (local)
+      if(!value) return null;
+      const [y,m,d] = value.split("-").map(Number);
+      if(!y||!m||!d) return null;
+      // store as ISO midnight local-ish by using Date(y,m-1,d)
+      const dt = new Date(y, m-1, d, 12, 0, 0); // noon reduces DST edge cases
+      return dt.toISOString();
+    }
+
+    function formatDue(iso){
+      if(!iso) return "No due date";
+      const dt = new Date(iso);
+      return dt.toLocaleDateString(undefined, { year:"numeric", month:"short", day:"numeric" });
+    }
+
+    function compareDue(aIso, bIso){
+      // null due goes last
+      if(!aIso && !bIso) return 0;
+      if(!aIso) return 1;
+      if(!bIso) return -1;
+      return new Date(aIso) - new Date(bIso);
+    }
+
+    function addDays(iso, days){
+      const dt = iso ? new Date(iso) : new Date();
+      dt.setDate(dt.getDate() + days);
+      return dt.toISOString();
+    }
+
+    function addMonths(iso, months){
+      const dt = iso ? new Date(iso) : new Date();
+      dt.setMonth(dt.getMonth() + months);
+      return dt.toISOString();
+    }
+
+    function nextDueFromRecurrence(currentDueIso, recurrence){
+      if(recurrence === "daily") return addDays(currentDueIso || nowISO(), 1);
+      if(recurrence === "weekly") return addDays(currentDueIso || nowISO(), 7);
+      if(recurrence === "monthly") return addMonths(currentDueIso || nowISO(), 1);
+      return null;
+    }
+
+    function isOverdue(dueIso){
+      if(!dueIso) return false;
+      const end = new Date(dueIso);
+      const now = new Date();
+      // treat overdue if due date (day) is before today (local)
+      const dueDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      return dueDay < today;
+    }
+
+    /**********************
      * DOM helpers
      **********************/
     const $ = (id) => document.getElementById(id);
@@ -579,6 +699,19 @@
       if(p === "high") return '<span class="badge bad">High</span>';
       if(p === "low") return '<span class="badge warn">Low</span>';
       return '<span class="badge good">Normal</span>';
+    }
+
+    function badgeForAssignee(a){
+      if(a === "Alejo") return '<span class="badge blue">Alejo</span>';
+      if(a === "Lina") return '<span class="badge purple">Lina</span>';
+      return '<span class="badge">Both</span>';
+    }
+
+    function badgeForRecurrence(r){
+      if(r === "daily") return '<span class="badge">Daily</span>';
+      if(r === "weekly") return '<span class="badge">Weekly</span>';
+      if(r === "monthly") return '<span class="badge">Monthly</span>';
+      return '';
     }
 
     function render(){
@@ -597,13 +730,11 @@
       const widgets = Array.from(grid.querySelectorAll(".widget"));
       const map = new Map(widgets.map(w => [w.dataset.widget, w]));
 
-      // reorder DOM based on saved layout
       state.layout.forEach(key => {
         const el = map.get(key);
         if(el) grid.appendChild(el);
       });
 
-      // drag setup on each widget header
       grid.querySelectorAll(".widget").forEach(w => {
         const handle = w.querySelector(".drag-handle");
         if(!handle) return;
@@ -647,34 +778,67 @@
     }
 
     /**********************
-     * To-Dos
+     * To-Dos & Chores
      **********************/
-    function addTodo(){
+    function addTodoFromInputs(){
       const title = $("todoTitle").value.trim();
       if(!title) return;
 
+      const assignee = $("todoAssignee").value;
+      const dueIso = parseDateInput($("todoDue").value);
+      const recurrence = $("todoRecurrence").value;
       const priority = $("todoPriority").value;
       const tags = $("todoTags").value.split(",").map(t => t.trim()).filter(Boolean);
 
-      state.todos.unshift({
-        id: uid(),
-        title,
-        priority,
-        tags,
-        done: false,
-        createdAt: nowISO()
+      addTodo({
+        title, assignee, dueIso, recurrence, priority, tags
       });
 
       $("todoTitle").value = "";
       $("todoTags").value = "";
+      $("todoDue").value = "";
+      $("todoRecurrence").value = "none";
+      $("todoPriority").value = "normal";
+
       saveState();
       renderTodos();
+    }
+
+    function addTodo({title, assignee, dueIso, recurrence, priority, tags}){
+      state.todos.unshift({
+        id: uid(),
+        title,
+        assignee: assignee || "Both",
+        dueAt: dueIso || null,
+        recurrence: recurrence || "none",
+        priority: priority || "normal",
+        tags: tags || [],
+        done: false,
+        createdAt: nowISO(),
+        completedAt: null
+      });
     }
 
     function toggleTodo(id, done){
       const t = state.todos.find(x => x.id === id);
       if(!t) return;
+
       t.done = done;
+      t.completedAt = done ? nowISO() : null;
+
+      // If completed and recurring, generate next instance
+      if(done && t.recurrence && t.recurrence !== "none"){
+        const nextDue = nextDueFromRecurrence(t.dueAt, t.recurrence);
+        addTodo({
+          title: t.title,
+          assignee: t.assignee,
+          dueIso: nextDue,
+          recurrence: t.recurrence,
+          priority: t.priority,
+          tags: Array.isArray(t.tags) ? [...t.tags] : []
+        });
+      }
+
       saveState();
       renderTodos();
     }
@@ -689,17 +853,40 @@
       const list = $("todoList");
       const q = filterText.toLowerCase();
 
-      const todos = state.todos.filter(t => {
+      let todos = state.todos.slice();
+
+      // sort: open first, then overdue/due soon, then due date, then created
+      todos.sort((a,b) => {
+        if(a.done !== b.done) return a.done ? 1 : -1;
+        const ao = isOverdue(a.dueAt), bo = isOverdue(b.dueAt);
+        if(ao !== bo) return ao ? -1 : 1;
+        const cd = compareDue(a.dueAt, b.dueAt);
+        if(cd !== 0) return cd;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      todos = todos.filter(t => {
         if(!q) return true;
-        const hay = [t.title, ...(t.tags||[])].join(" ").toLowerCase();
+        const hay = [
+          t.title,
+          t.assignee,
+          t.recurrence,
+          t.priority,
+          formatDue(t.dueAt),
+          ...(t.tags||[])
+        ].join(" ").toLowerCase();
         return hay.includes(q);
       });
 
-      const open = todos.filter(t => !t.done).length;
+      const open = state.todos.filter(t => !t.done).length;
       $("todoCount").textContent = `(${open} open)`;
 
       list.innerHTML = todos.map(t => {
         const tags = (t.tags||[]).slice(0,6).map(x => `<span class="badge">${escapeHTML(x)}</span>`).join("");
+        const overdue = isOverdue(t.dueAt);
+        const dueBadge = t.dueAt ? `<span class="badge ${overdue ? "bad" : "warn"}">Due: ${escapeHTML(formatDue(t.dueAt))}</span>` : `<span class="badge">No due</span>`;
+        const recur = badgeForRecurrence(t.recurrence);
+
         return `
           <div class="item">
             <div class="left">
@@ -710,9 +897,13 @@
                   ${escapeHTML(t.title)}
                 </div>
                 <div class="badges">
+                  ${badgeForAssignee(t.assignee)}
                   ${badgeForPriority(t.priority)}
+                  ${dueBadge}
+                  ${recur}
                   ${tags}
                 </div>
+                ${overdue && !t.done ? `<div class="s" style="color: rgba(251,113,133,.85)">Overdue</div>` : `<div class="s">${escapeHTML(t.done ? "Completed" : "In progress")}</div>`}
               </div>
             </div>
             <button class="btn danger" onclick="removeTodo('${t.id}')" title="Delete">✕</button>
@@ -728,23 +919,29 @@
     /**********************
      * Work Items
      **********************/
-    function addWork(){
+    function addWorkFromInputs(){
       const title = $("workTitle").value.trim();
       if(!title) return;
 
+      const assignee = $("workAssignee").value;
       const status = $("workStatus").value;
       const room = $("workRoom").value.trim();
+      const dueIso = parseDateInput($("workDue").value);
 
       state.workItems.unshift({
         id: uid(),
         title,
+        assignee: assignee || "Both",
         status,
         room,
+        targetAt: dueIso || null,
         createdAt: nowISO()
       });
 
       $("workTitle").value = "";
       $("workRoom").value = "";
+      $("workDue").value = "";
+
       saveState();
       renderWork();
     }
@@ -774,37 +971,59 @@
       const list = $("workList");
       const q = filterText.toLowerCase();
 
-      const work = state.workItems.filter(w => {
+      let work = state.workItems.slice();
+
+      // sort: open first, then overdue target, then target date
+      work.sort((a,b) => {
+        if(a.status === "DONE" && b.status !== "DONE") return 1;
+        if(a.status !== "DONE" && b.status === "DONE") return -1;
+        const ao = isOverdue(a.targetAt), bo = isOverdue(b.targetAt);
+        if(ao !== bo) return ao ? -1 : 1;
+        const cd = compareDue(a.targetAt, b.targetAt);
+        if(cd !== 0) return cd;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      work = work.filter(w => {
         if(!q) return true;
-        const hay = [w.title, w.room, w.status].join(" ").toLowerCase();
+        const hay = [w.title, w.room, w.status, w.assignee, formatDue(w.targetAt)].join(" ").toLowerCase();
         return hay.includes(q);
       });
 
-      const open = work.filter(w => w.status !== "DONE").length;
+      const open = state.workItems.filter(w => w.status !== "DONE").length;
       $("workCount").textContent = `(${open} open)`;
 
-      list.innerHTML = work.map(w => `
-        <div class="item">
-          <div class="left">
-            <div class="meta">
-              <div class="t">${escapeHTML(w.title)}</div>
-              <div class="s">${escapeHTML(w.room || "—")} • ${escapeHTML(w.status)}</div>
-              <div class="badges">
-                ${statusBadge(w.status)}
-                ${w.room ? `<span class="badge">${escapeHTML(w.room)}</span>` : ""}
-              </div>
-              <div style="margin-top:8px" class="row">
-                <select onchange="updateWorkStatus('${w.id}', this.value)">
-                  ${["NEW","PLANNED","IN_PROGRESS","DONE"].map(s =>
-                    `<option value="${s}" ${s===w.status?"selected":""}>${s.replace("_"," ")}</option>`
-                  ).join("")}
-                </select>
+      list.innerHTML = work.map(w => {
+        const overdue = isOverdue(w.targetAt);
+        const targetBadge = w.targetAt
+          ? `<span class="badge ${overdue && w.status!=="DONE" ? "bad" : "warn"}">Target: ${escapeHTML(formatDue(w.targetAt))}</span>`
+          : `<span class="badge">No target</span>`;
+
+        return `
+          <div class="item">
+            <div class="left">
+              <div class="meta">
+                <div class="t">${escapeHTML(w.title)}</div>
+                <div class="s">${escapeHTML(w.room || "—")} • ${escapeHTML(w.status)} • ${escapeHTML(w.assignee)}</div>
+                <div class="badges">
+                  ${badgeForAssignee(w.assignee)}
+                  ${statusBadge(w.status)}
+                  ${targetBadge}
+                  ${w.room ? `<span class="badge">${escapeHTML(w.room)}</span>` : ""}
+                </div>
+                <div style="margin-top:8px" class="row">
+                  <select onchange="updateWorkStatus('${w.id}', this.value)">
+                    ${["NEW","PLANNED","IN_PROGRESS","DONE"].map(s =>
+                      `<option value="${s}" ${s===w.status?"selected":""}>${s.replace("_"," ")}</option>`
+                    ).join("")}
+                  </select>
+                </div>
               </div>
             </div>
+            <button class="btn danger" onclick="removeWork('${w.id}')" title="Delete">✕</button>
           </div>
-          <button class="btn danger" onclick="removeWork('${w.id}')" title="Delete">✕</button>
-        </div>
-      `).join("");
+        `;
+      }).join("");
 
       if(!work.length){
         list.innerHTML = `<div class="muted">No work items yet. Add one above.</div>`;
@@ -812,14 +1031,14 @@
     }
 
     /**********************
-     * Receipts (stored locally)
-     * We store image as a data URL (base64).
-     * For lots of receipts, this can grow localStorage quickly.
+     * Receipts (local)
      **********************/
     function addReceipt(){
       const merchant = $("merchant").value.trim();
       const totalRaw = $("total").value.trim();
       const category = $("category").value;
+      const paidBy = $("receiptPaidBy").value;
+      const purchaseIso = parseDateInput($("receiptDate").value);
       const file = $("receiptFile").files[0];
 
       const total = parseFloat(totalRaw);
@@ -833,29 +1052,31 @@
         merchant,
         total: Math.round(total * 100) / 100,
         category,
+        paidBy,
+        purchasedAt: purchaseIso || null,
         createdAt: nowISO(),
         imageDataUrl: null
       };
 
-      if(!file){
+      const finalize = () => {
         state.receipts.unshift(receipt);
         $("merchant").value = "";
         $("total").value = "";
         $("receiptFile").value = "";
+        $("receiptDate").value = "";
         saveState();
         renderReceipts();
+      };
+
+      if(!file){
+        finalize();
         return;
       }
 
       const reader = new FileReader();
       reader.onload = () => {
         receipt.imageDataUrl = reader.result;
-        state.receipts.unshift(receipt);
-        $("merchant").value = "";
-        $("total").value = "";
-        $("receiptFile").value = "";
-        saveState();
-        renderReceipts();
+        finalize();
       };
       reader.readAsDataURL(file);
     }
@@ -872,35 +1093,52 @@
 
       const receipts = state.receipts.filter(r => {
         if(!q) return true;
-        const hay = [r.merchant, r.category, String(r.total)].join(" ").toLowerCase();
+        const hay = [r.merchant, r.category, r.paidBy, String(r.total), formatDue(r.purchasedAt)].join(" ").toLowerCase();
         return hay.includes(q);
       });
 
       $("receiptCount").textContent = `(${receipts.length})`;
 
-      // summary by category (top few)
-      const totals = {};
+      // summary by category
+      const totalsByCat = {};
       for(const r of state.receipts){
-        totals[r.category] = (totals[r.category] || 0) + (Number(r.total) || 0);
+        totalsByCat[r.category] = (totalsByCat[r.category] || 0) + (Number(r.total) || 0);
       }
-      const top = Object.entries(totals)
+      const topCats = Object.entries(totalsByCat)
         .sort((a,b)=>b[1]-a[1])
         .slice(0,4)
         .map(([k,v]) => `${k}: $${v.toFixed(2)}`)
         .join(" • ");
-      $("receiptSummary").textContent = top ? `Top categories: ${top}` : "No receipt totals yet.";
+
+      // summary by paidBy
+      const totalsByPerson = {};
+      for(const r of state.receipts){
+        totalsByPerson[r.paidBy] = (totalsByPerson[r.paidBy] || 0) + (Number(r.total) || 0);
+      }
+      const topPeople = Object.entries(totalsByPerson)
+        .sort((a,b)=>b[1]-a[1])
+        .map(([k,v]) => `${k}: $${v.toFixed(2)}`)
+        .join(" • ");
+
+      $("receiptSummary").textContent =
+        (topCats ? `Top categories: ${topCats}` : "No receipt totals yet.") +
+        (topPeople ? `  |  Paid by: ${topPeople}` : "");
 
       list.innerHTML = receipts.map(r => {
-        const img = r.imageDataUrl ? `<img alt="Receipt" src="${r.imageDataUrl}" style="width:72px;height:72px;border-radius:16px;object-fit:cover;border:1px solid rgba(255,255,255,.14)"/>` : "";
+        const img = r.imageDataUrl
+          ? `<img alt="Receipt" src="${r.imageDataUrl}" style="width:72px;height:72px;border-radius:16px;object-fit:cover;border:1px solid rgba(255,255,255,.14)"/>`
+          : "";
+        const dateLabel = r.purchasedAt ? ` • ${escapeHTML(formatDue(r.purchasedAt))}` : "";
         return `
           <div class="item">
             <div class="left">
               ${img}
               <div class="meta">
                 <div class="t">${escapeHTML(r.merchant)} — $${Number(r.total).toFixed(2)}</div>
-                <div class="s">${escapeHTML(r.category)} • ${new Date(r.createdAt).toLocaleString()}</div>
+                <div class="s">${escapeHTML(r.category)} • ${escapeHTML(r.paidBy)}${dateLabel}</div>
                 <div class="badges">
                   <span class="badge good">${escapeHTML(r.category)}</span>
+                  ${badgeForAssignee(r.paidBy)}
                 </div>
               </div>
             </div>
@@ -952,7 +1190,6 @@
       const bins = state.inventory.bins;
       $("invCount").textContent = `(${bins.reduce((n,b)=>n+b.items.length,0)} items)`;
 
-      // populate select
       const sel = $("binSelect");
       const current = sel.value;
       sel.innerHTML = bins.map(b => `<option value="${b.id}">${escapeHTML(b.name)} (${b.items.length})</option>`).join("");
@@ -1010,6 +1247,44 @@
     }
 
     /**********************
+     * Backup / Restore
+     **********************/
+    function backup(){
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `household-os-backup-${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function triggerRestore(){
+      $("restoreFile").value = "";
+      $("restoreFile").click();
+    }
+
+    function handleRestoreFile(file){
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try{
+          const parsed = JSON.parse(reader.result);
+          const normalized = normalizeState(parsed);
+          state = normalized;
+          saveState();
+          render();
+          alert("Restore complete ✅");
+        }catch(e){
+          alert("Restore failed. That file doesn't look like a Household OS backup.");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    /**********************
      * Reset
      **********************/
     function resetAll(){
@@ -1025,10 +1300,59 @@
      * Quick Add Modal
      **********************/
     function openQuickAdd(){
+      $("qaTitle").value = "";
+      $("qaDue").value = "";
+      $("qaRecurrence").value = "none";
+      $("qaAssignee").value = "Both";
       $("quickAddModal").showModal();
+      $("qaTitle").focus();
     }
     function closeQuickAdd(){
       $("quickAddModal").close();
+    }
+
+    function qaToTodo(){
+      const title = $("qaTitle").value.trim();
+      if(!title) return;
+
+      const assignee = $("qaAssignee").value;
+      const dueIso = parseDateInput($("qaDue").value);
+      const recurrence = $("qaRecurrence").value;
+
+      addTodo({
+        title,
+        assignee,
+        dueIso,
+        recurrence,
+        priority: "normal",
+        tags: []
+      });
+
+      saveState();
+      renderTodos();
+      closeQuickAdd();
+    }
+
+    function qaToWork(){
+      const title = $("qaTitle").value.trim();
+      if(!title) return;
+
+      const assignee = $("qaAssignee").value;
+      const dueIso = parseDateInput($("qaDue").value);
+
+      state.workItems.unshift({
+        id: uid(),
+        title,
+        assignee,
+        status: "NEW",
+        room: "",
+        targetAt: dueIso || null,
+        createdAt: nowISO()
+      });
+
+      saveState();
+      renderWork();
+      closeQuickAdd();
     }
 
     /**********************
@@ -1041,11 +1365,11 @@
     window.removeReceipt = removeReceipt;
     window.removeInvItem = removeInvItem;
 
-    $("addTodoBtn").addEventListener("click", addTodo);
-    $("todoTitle").addEventListener("keydown", (e)=>{ if(e.key==="Enter") addTodo(); });
+    $("addTodoBtn").addEventListener("click", addTodoFromInputs);
+    $("todoTitle").addEventListener("keydown", (e)=>{ if(e.key==="Enter") addTodoFromInputs(); });
 
-    $("addWorkBtn").addEventListener("click", addWork);
-    $("workTitle").addEventListener("keydown", (e)=>{ if(e.key==="Enter") addWork(); });
+    $("addWorkBtn").addEventListener("click", addWorkFromInputs);
+    $("workTitle").addEventListener("keydown", (e)=>{ if(e.key==="Enter") addWorkFromInputs(); });
 
     $("addReceiptBtn").addEventListener("click", addReceipt);
 
@@ -1058,42 +1382,24 @@
 
     $("quickAddBtn").addEventListener("click", openQuickAdd);
     $("closeModalBtn").addEventListener("click", closeQuickAdd);
-    $("quickAddModal").addEventListener("click", (e)=>{
-      // click outside content closes
-      const rect = e.target.getBoundingClientRect?.();
-      if(e.target === $("quickAddModal")) closeQuickAdd();
-    });
 
-    $("qaTodo").addEventListener("click", ()=>{
-      closeQuickAdd();
-      $("todoTitle").focus();
-    });
-    $("qaWork").addEventListener("click", ()=>{
-      closeQuickAdd();
-      $("workTitle").focus();
-    });
+    $("qaTodo").addEventListener("click", qaToTodo);
+    $("qaWork").addEventListener("click", qaToWork);
     $("qaReceipt").addEventListener("click", ()=>{
       closeQuickAdd();
       $("merchant").focus();
     });
 
+    $("backupBtn").addEventListener("click", backup);
+    $("restoreBtn").addEventListener("click", triggerRestore);
+    $("restoreFile").addEventListener("change", (e)=> handleRestoreFile(e.target.files[0]));
+
     $("resetBtn").addEventListener("click", resetAll);
 
     // initial render
+    saveState();
     render();
 
-    /**********************
-     * Service worker registration (optional).
-     * For PWA installability, browsers require a manifest file;
-     * SW often used for offline/caching patterns.
-     **********************/
+    // Optional service worker registration (ignored if sw.js doesn't exist)
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch(() => {
-          // ignore if sw.js doesn't exist yet
-        });
-      });
-    }
-  </script>
-</body>
-</html>
+     
