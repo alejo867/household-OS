@@ -1,8 +1,5 @@
 import clsx from 'clsx'
-
-const PALETTE = [
-  'bg-moss-400', 'bg-clay-400', 'bg-moss-600', 'bg-clay-600', 'bg-moss-300', 'bg-clay-300'
-]
+import { AVATAR_PALETTE } from '@/lib/colors'
 
 function hashName(name: string) {
   let hash = 0
@@ -44,7 +41,7 @@ export function Avatar({
     )
   }
 
-  const color = PALETTE[hashName(name || 'H') % PALETTE.length]
+  const color = AVATAR_PALETTE[hashName(name || 'H') % AVATAR_PALETTE.length]
 
   return (
     <div
