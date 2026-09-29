@@ -3,31 +3,34 @@
 @tailwind utilities;
 
 :root {
-  --color-bg: 250 247 240;
+  --color-bg: 253 250 244;
   --color-surface: 255 255 255;
-  --color-surface2: 243 239 230;
-  --color-ink: 43 36 32;
-  --color-muted: 122 114 104;
-  --color-border: 231 223 208;
+  --color-surface2: 246 241 231;
+  --color-ink: 33 29 26;
+  --color-muted: 100 91 82;
+  --color-border: 223 213 197;
+  --color-ring: 37 99 235;
 }
 
 :root[data-theme='dark'] {
-  --color-bg: 24 23 20;
-  --color-surface: 32 30 26;
-  --color-surface2: 40 37 32;
-  --color-ink: 240 236 227;
-  --color-muted: 163 154 140;
-  --color-border: 54 49 42;
+  --color-bg: 17 18 20;
+  --color-surface: 27 28 31;
+  --color-surface2: 35 36 40;
+  --color-ink: 245 243 238;
+  --color-muted: 178 172 163;
+  --color-border: 56 56 61;
+  --color-ring: 143 196 255;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --color-bg: 24 23 20;
-    --color-surface: 32 30 26;
-    --color-surface2: 40 37 32;
-    --color-ink: 240 236 227;
-    --color-muted: 163 154 140;
-    --color-border: 54 49 42;
+    --color-bg: 17 18 20;
+    --color-surface: 27 28 31;
+    --color-surface2: 35 36 40;
+    --color-ink: 245 243 238;
+    --color-muted: 178 172 163;
+    --color-border: 56 56 61;
+    --color-ring: 143 196 255;
   }
 }
 
@@ -50,6 +53,22 @@ body {
 
 ::selection {
   background: rgb(var(--color-ink) / 0.12);
+}
+
+/* Global keyboard-focus visibility: every interactive element gets a clear,
+   high-contrast ring even if a component forgets its own focus-visible classes. */
+:focus-visible {
+  outline: 2px solid rgb(var(--color-ring));
+  outline-offset: 2px;
+}
+
+/* Respect a person's reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 /* soft organic blob accents used behind cards/headers */
