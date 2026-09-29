@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: 250 247 240;
+  --color-surface: 255 255 255;
+  --color-surface2: 243 239 230;
+  --color-ink: 43 36 32;
+  --color-muted: 122 114 104;
+  --color-border: 231 223 208;
+}
+
+:root[data-theme='dark'] {
+  --color-bg: 24 23 20;
+  --color-surface: 32 30 26;
+  --color-surface2: 40 37 32;
+  --color-ink: 240 236 227;
+  --color-muted: 163 154 140;
+  --color-border: 54 49 42;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: 24 23 20;
+    --color-surface: 32 30 26;
+    --color-surface2: 40 37 32;
+    --color-ink: 240 236 227;
+    --color-muted: 163 154 140;
+    --color-border: 54 49 42;
+  }
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  background-color: rgb(var(--color-bg));
+  color: rgb(var(--color-ink));
+  font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+.font-display {
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+}
+
+::selection {
+  background: rgb(var(--color-ink) / 0.12);
+}
+
+/* soft organic blob accents used behind cards/headers */
+.blob-accent {
+  position: absolute;
+  border-radius: 60% 40% 55% 45% / 45% 55% 45% 55%;
+  filter: blur(40px);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-pop {
+  animation: pop-in 0.25s ease-out;
+}
