@@ -1,2 +1,2 @@
-# household-OS
+# nido-household-OS
 Intelligent dashboard for the home
