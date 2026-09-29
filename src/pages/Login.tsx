@@ -53,39 +53,67 @@ export function Login() {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-3 text-left">
           {mode === 'signup' && (
-            <input
-              type="text"
-              placeholder="Your name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-ink shadow-soft outline-none placeholder:text-muted focus:border-moss-400"
-            />
+            <div>
+              <label htmlFor="login-name" className="sr-only">
+                Your name
+              </label>
+              <input
+                id="login-name"
+                type="text"
+                placeholder="Your name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="w-full rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-ink shadow-soft outline-none placeholder:text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:bg-surface2"
+              />
+            </div>
           )}
-          <input
-            type="email"
-            required
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-ink shadow-soft outline-none placeholder:text-muted focus:border-moss-400"
-          />
-          <input
-            type="password"
-            required
-            minLength={6}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-ink shadow-soft outline-none placeholder:text-muted focus:border-moss-400"
-          />
+          <div>
+            <label htmlFor="login-email" className="sr-only">
+              Email
+            </label>
+            <input
+              id="login-email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-ink shadow-soft outline-none placeholder:text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:bg-surface2"
+            />
+          </div>
+          <div>
+            <label htmlFor="login-password" className="sr-only">
+              Password
+            </label>
+            <input
+              id="login-password"
+              type="password"
+              required
+              minLength={6}
+              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-ink shadow-soft outline-none placeholder:text-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:bg-surface2"
+            />
+          </div>
 
-          {error && <p className="text-sm text-clay-600">{error}</p>}
-          {info && <p className="text-sm text-moss-600">{info}</p>}
+          {error && (
+            <p role="alert" className="text-sm text-clay-600 dark:text-clay-300">
+              {error}
+            </p>
+          )}
+          {info && (
+            <p role="status" className="text-sm text-moss-600 dark:text-moss-300">
+              {info}
+            </p>
+          )}
 
           <button
             type="submit"
             disabled={busy}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-ink px-5 py-3.5 font-medium text-bg shadow-soft transition hover:opacity-90 disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-ink px-5 py-3.5 font-medium text-bg shadow-soft transition hover:opacity-90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-60"
           >
             {busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
           </button>
@@ -97,7 +125,7 @@ export function Login() {
             setError(null)
             setInfo(null)
           }}
-          className="mt-4 text-sm font-medium text-moss-600 underline-offset-4 hover:underline"
+          className="mt-4 rounded text-sm font-medium text-moss-600 underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring dark:text-moss-300"
         >
           {mode === 'signin' ? "New here? Create an account" : 'Already have an account? Sign in'}
         </button>
