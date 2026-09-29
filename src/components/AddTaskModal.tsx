@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Modal } from './Modal'
 import { TASK_CATEGORIES } from '@/lib/types'
 import type { HouseholdMember } from '@/lib/types'
+import { CATEGORY_STYLES } from '@/lib/colors'
 import clsx from 'clsx'
 
 export function AddTaskModal({
@@ -55,53 +56,67 @@ export function AddTaskModal({
     <Modal open={open} onClose={onClose} title="New recurring task">
       <div className="space-y-4">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-muted">What needs doing?</label>
+          <label htmlFor="task-title" className="mb-1.5 block text-sm font-medium text-muted">
+            What needs doing?
+          </label>
           <input
+            id="task-title"
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Change AC filter"
-            className="w-full rounded-xl border border-border bg-surface2 px-3.5 py-2.5 text-ink outline-none ring-moss-400 placeholder:text-muted/70 focus:ring-2"
+            className="w-full rounded-xl border border-border bg-surface2 px-3.5 py-2.5 text-ink outline-none ring-sky-400 placeholder:text-muted/70 focus:ring-2"
           />
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-muted">Category</label>
-          <div className="flex flex-wrap gap-2">
-            {TASK_CATEGORIES.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setCategory(c.id)}
-                className={clsx(
-                  'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition',
-                  category === c.id
-                    ? 'border-moss-500 bg-moss-500/10 text-moss-700 dark:text-moss-300'
-                    : 'border-border text-muted hover:border-moss-300'
-                )}
-              >
-                <span>{c.icon}</span> {c.label}
-              </button>
-            ))}
+          <span id="task-category-label" className="mb-1.5 block text-sm font-medium text-muted">
+            Category
+          </span>
+          <div role="group" aria-labelledby="task-category-label" className="flex flex-wrap gap-2">
+            {TASK_CATEGORIES.map((c) => {
+              const styles = CATEGORY_STYLES[c.color]
+              const active = category === c.id
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setCategory(c.id)}
+                  aria-pressed={active}
+                  className={clsx(
+                    'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                    active ? styles.chipActive : clsx('border-border text-muted', styles.chipHover)
+                  )}
+                >
+                  <span>{c.icon}</span> {c.label}
+                </button>
+              )
+            })}
           </div>
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-muted">Repeat every</label>
+          <label htmlFor="task-interval" className="mb-1.5 block text-sm font-medium text-muted">
+            Repeat every
+          </label>
           <div className="flex items-center gap-2">
             <input
+              id="task-interval"
               type="number"
               min={1}
               value={interval}
               onChange={(e) => setInterval(Number(e.target.value) || 1)}
-              className="w-24 rounded-xl border border-border bg-surface2 px-3.5 py-2.5 text-ink outline-none ring-moss-400 focus:ring-2"
+              className="w-24 rounded-xl border border-border bg-surface2 px-3.5 py-2.5 text-ink outline-none ring-sky-400 focus:ring-2"
             />
             <span className="text-sm text-muted">days</span>
             <div className="ml-auto flex gap-1.5">
               {[7, 30, 90, 180].map((d) => (
                 <button
                   key={d}
+                  type="button"
                   onClick={() => setInterval(d)}
-                  className="rounded-full border border-border px-2.5 py-1 text-xs text-muted transition hover:border-moss-300"
+                  aria-label={`Repeat every ${d} days`}
+                  className="rounded-full border border-border px-2.5 py-1 text-xs text-muted transition hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
                 >
                   {d}d
                 </button>
@@ -112,13 +127,17 @@ export function AddTaskModal({
 
         {members.length > 0 && (
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-muted">Assign to</label>
-            <div className="flex flex-wrap gap-2">
+            <span id="task-assignee-label" className="mb-1.5 block text-sm font-medium text-muted">
+              Assign to
+            </span>
+            <div role="group" aria-labelledby="task-assignee-label" className="flex flex-wrap gap-2">
               <button
+                type="button"
                 onClick={() => setAssignedTo(null)}
+                aria-pressed={assignedTo === null}
                 className={clsx(
-                  'rounded-full border px-3 py-1.5 text-sm transition',
-                  assignedTo === null ? 'border-moss-500 bg-moss-500/10 text-moss-700 dark:text-moss-300' : 'border-border text-muted'
+                  'rounded-full border px-3 py-1.5 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                  assignedTo === null ? 'border-sky-500 bg-sky-500/10 text-sky-700 dark:text-sky-300' : 'border-border text-muted'
                 )}
               >
                 Anyone
@@ -126,11 +145,13 @@ export function AddTaskModal({
               {members.map((m) => (
                 <button
                   key={m.user_id}
+                  type="button"
                   onClick={() => setAssignedTo(m.user_id)}
+                  aria-pressed={assignedTo === m.user_id}
                   className={clsx(
-                    'rounded-full border px-3 py-1.5 text-sm transition',
+                    'rounded-full border px-3 py-1.5 text-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
                     assignedTo === m.user_id
-                      ? 'border-moss-500 bg-moss-500/10 text-moss-700 dark:text-moss-300'
+                      ? 'border-sky-500 bg-sky-500/10 text-sky-700 dark:text-sky-300'
                       : 'border-border text-muted'
                   )}
                 >
@@ -142,9 +163,10 @@ export function AddTaskModal({
         )}
 
         <button
+          type="button"
           onClick={submit}
           disabled={saving || !title.trim()}
-          className="w-full rounded-xl bg-moss-500 py-3 font-medium text-white transition hover:bg-moss-600 disabled:opacity-50"
+          className="w-full rounded-xl bg-moss-500 py-3 font-medium text-white transition hover:bg-moss-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
         >
           {saving ? 'Adding…' : 'Add task'}
         </button>
