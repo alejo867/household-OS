@@ -30,14 +30,14 @@ export function Layout() {
           <div className="flex items-center gap-2">
             <button
               onClick={toggle}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-surface2 hover:text-ink"
-              aria-label="Toggle theme"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-surface2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              aria-label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
             >
               {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
             </button>
             <button
               onClick={signOut}
-              className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-surface2 hover:text-ink"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition hover:bg-surface2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               aria-label="Sign out"
             >
               <LogOut size={17} />
@@ -60,8 +60,8 @@ export function Layout() {
               end={end}
               className={({ isActive }) =>
                 clsx(
-                  'flex flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-xs font-medium transition',
-                  isActive ? 'text-moss-600 dark:text-moss-300' : 'text-muted hover:text-ink'
+                  'flex flex-col items-center gap-1 rounded-xl px-4 py-1.5 text-xs font-medium transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
+                  isActive ? 'bg-sky-500/10 text-sky-700 dark:text-sky-300' : 'text-muted hover:text-ink'
                 )
               }
             >
