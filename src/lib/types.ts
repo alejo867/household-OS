@@ -10,6 +10,7 @@ export type Household = {
   name: string
   created_by: string | null
   created_at: string
+  calendar_token?: string | null
 }
 
 export type HouseholdMember = {
@@ -50,12 +51,14 @@ export type Todo = {
 }
 
 export const TASK_CATEGORIES = [
-  { id: 'filters', label: 'Filters', icon: '💧' },
-  { id: 'laundry', label: 'Laundry', icon: '🧺' },
-  { id: 'tank', label: 'Fish Tank', icon: '🐠' },
-  { id: 'plants', label: 'Plants', icon: '🌿' },
-  { id: 'cleaning', label: 'Cleaning', icon: '🧹' },
-  { id: 'kitchen', label: 'Kitchen', icon: '🍳' },
-  { id: 'car', label: 'Vehicle', icon: '🚗' },
-  { id: 'general', label: 'General', icon: '🏡' }
+  { id: 'filters', label: 'Filters', icon: '💧', color: 'sky' },
+  { id: 'laundry', label: 'Laundry', icon: '🧺', color: 'berry' },
+  { id: 'tank', label: 'Fish Tank', icon: '🐠', color: 'sky' },
+  { id: 'plants', label: 'Plants', icon: '🌿', color: 'moss' },
+  { id: 'cleaning', label: 'Cleaning', icon: '🧹', color: 'berry' },
+  { id: 'kitchen', label: 'Kitchen', icon: '🍳', color: 'sun' },
+  { id: 'car', label: 'Vehicle', icon: '🚗', color: 'clay' },
+  { id: 'general', label: 'General', icon: '🏡', color: 'moss' }
 ] as const
+
+export type CategoryColor = (typeof TASK_CATEGORIES)[number]['color']
