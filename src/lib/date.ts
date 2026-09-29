@@ -1,4 +1,4 @@
-import { differenceInCalendarDays, format, isPast, isToday, isTomorrow } from 'date-fns'import { differenceInCalendarDays, format, isPast, isToday, isTomorrow } from 'date-fns'
+import { differenceInCalendarDays, format, isPast, isToday, isTomorrow } from 'date-fns'
 
 export function dueLabel(dateStr: string): { label: string; tone: 'overdue' | 'today' | 'soon' | 'later' } {
   const date = new Date(dateStr)
@@ -16,4 +16,11 @@ export function dueLabel(dateStr: string): { label: string; tone: 'overdue' | 't
 
 export function formatDate(dateStr: string) {
   return format(new Date(dateStr), 'MMM d, yyyy')
+}
+
+export const TONE_STYLES: Record<'overdue' | 'today' | 'soon' | 'later', string> = {
+  overdue: 'bg-clay-500/10 text-clay-600 dark:bg-clay-500/15 dark:text-clay-300',
+  today: 'bg-sun-500/10 text-sun-700 dark:bg-sun-500/15 dark:text-sun-300',
+  soon: 'bg-sky-500/10 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
+  later: 'bg-surface2 text-muted'
 }
