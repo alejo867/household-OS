@@ -1,16 +1,11 @@
 import clsx from 'clsx'
 import { Check, MoreHorizontal, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { dueLabel } from '@/lib/date'
+import { dueLabel, TONE_STYLES } from '@/lib/date'
+import { TASK_CATEGORIES } from '@/lib/types'
 import type { RecurringTask } from '@/lib/types'
+import { CATEGORY_STYLES } from '@/lib/colors'
 import { Avatar } from './Avatar'
-
-const TONE_STYLES: Record<string, string> = {
-  overdue: 'bg-clay-500/10 text-clay-600 dark:text-clay-300',
-  today: 'bg-clay-400/10 text-clay-600 dark:text-clay-300',
-  soon: 'bg-moss-400/10 text-moss-700 dark:text-moss-300',
-  later: 'bg-surface2 text-muted'
-}
 
 export function TaskCard({
   task,
@@ -26,6 +21,8 @@ export function TaskCard({
   const [busy, setBusy] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const { label, tone } = dueLabel(task.next_due_at)
+  const category = TASK_CATEGORIES.find((c) => c.id === task.category)
+  const iconStyle = category ? CATEGORY_STYLES[category.color].icon : 'bg-surface2 text-ink'
 
   const complete = async () => {
     setBusy(true)
@@ -35,7 +32,7 @@ export function TaskCard({
 
   return (
     <div className="group relative flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-softer transition hover:shadow-soft">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-surface2 text-xl">
+      <div className={clsx('flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-xl', iconStyle)}>
         {task.icon}
       </div>
 
@@ -52,7 +49,7 @@ export function TaskCard({
       <button
         onClick={complete}
         disabled={busy}
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-moss-500 text-white transition hover:bg-moss-600 disabled:opacity-50"
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-moss-500 text-white transition hover:bg-moss-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring disabled:opacity-50"
         aria-label="Mark done"
       >
         <Check size={18} />
