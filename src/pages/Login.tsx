@@ -1,7 +1,39 @@
+import { useState, FormEvent } from 'react'
 import { useAuth } from '@/lib/useAuth'
 
 export function Login() {
-  const { signInWithGoogle } = useAuth()
+  const { signInWithPassword, signUp } = useAuth()
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setInfo(null)
+    setBusy(true)
+
+    const result =
+      mode === 'signin'
+        ? await signInWithPassword(email, password)
+        : await signUp(email, password, fullName || email.split('@')[0])
+
+    setBusy(false)
+
+    if (result.error) {
+      setError(result.error)
+      return
+    }
+
+    if (mode === 'signup') {
+      setInfo('Account created! You can sign in now.')
+      setMode('signin')
+    }
+  }
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-bg px-6">
@@ -19,29 +51,55 @@ export function Login() {
           place you and your person can share.
         </p>
 
+        <form onSubmit={handleSubmit} className="mt-8 space-y-3 text-left">
+          {mode === 'signup' && (
+            <input
+              type="text"
+              placeholder="Your name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-ink shadow-soft outline-none placeholder:text-muted focus:border-moss-400"
+            />
+          )}
+          <input
+            type="email"
+            required
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-ink shadow-soft outline-none placeholder:text-muted focus:border-moss-400"
+          />
+          <input
+            type="password"
+            required
+            minLength={6}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-2xl border border-ink/10 bg-white/70 px-4 py-3 text-ink shadow-soft outline-none placeholder:text-muted focus:border-moss-400"
+          />
+
+          {error && <p className="text-sm text-clay-600">{error}</p>}
+          {info && <p className="text-sm text-moss-600">{info}</p>}
+
+          <button
+            type="submit"
+            disabled={busy}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-ink px-5 py-3.5 font-medium text-bg shadow-soft transition hover:opacity-90 disabled:opacity-60"
+          >
+            {busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+          </button>
+        </form>
+
         <button
-          onClick={signInWithGoogle}
-          className="mt-8 flex w-full items-center justify-center gap-3 rounded-2xl bg-ink px-5 py-3.5 font-medium text-bg shadow-soft transition hover:opacity-90"
+          onClick={() => {
+            setMode(mode === 'signin' ? 'signup' : 'signin')
+            setError(null)
+            setInfo(null)
+          }}
+          className="mt-4 text-sm font-medium text-moss-600 underline-offset-4 hover:underline"
         >
-          <svg width="18" height="18" viewBox="0 0 48 48">
-            <path
-              fill="#FFC107"
-              d="M43.6 20.5h-1.9V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"
-            />
-            <path
-              fill="#FF3D00"
-              d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4c-7.4 0-13.8 4.1-17.1 10.1z"
-            />
-            <path
-              fill="#4CAF50"
-              d="M24 44c5.5 0 10.4-2.1 14.1-5.6l-6.5-5.5c-2 1.5-4.6 2.4-7.6 2.4-5.2 0-9.6-3.3-11.3-7.9l-6.6 5.1C9.9 39.6 16.4 44 24 44z"
-            />
-            <path
-              fill="#1976D2"
-              d="M43.6 20.5H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.5 5.5C41.4 36.6 44 30.8 44 24c0-1.3-.1-2.7-.4-3.5z"
-            />
-          </svg>
-          Continue with Google
+          {mode === 'signin' ? "New here? Create an account" : 'Already have an account? Sign in'}
         </button>
 
         <p className="mt-4 text-xs text-muted">
