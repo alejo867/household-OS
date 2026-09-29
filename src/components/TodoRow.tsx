@@ -2,7 +2,7 @@ import clsx from 'clsx'
 import { Trash2 } from 'lucide-react'
 import type { Todo } from '@/lib/types'
 import { Avatar } from './Avatar'
-import { formatDate } from '@/lib/date'
+import { dueLabel, TONE_STYLES } from '@/lib/date'
 
 export function TodoRow({
   todo,
@@ -15,15 +15,17 @@ export function TodoRow({
   onToggle: (id: string, done: boolean) => void
   onDelete: (id: string) => void
 }) {
+  const due = todo.due_date && !todo.is_done ? dueLabel(todo.due_date) : null
+
   return (
     <div className="group flex items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 shadow-softer transition hover:shadow-soft">
       <button
         onClick={() => onToggle(todo.id, !todo.is_done)}
         className={clsx(
-          'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition',
+          'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
           todo.is_done ? 'border-moss-500 bg-moss-500 text-white' : 'border-border text-transparent hover:border-moss-400'
         )}
-        aria-label="Toggle done"
+        aria-label={todo.is_done ? 'Mark as not done' : 'Mark as done'}
       >
         ✓
       </button>
@@ -32,10 +34,10 @@ export function TodoRow({
         <p className={clsx('truncate font-medium', todo.is_done ? 'text-muted line-through' : 'text-ink')}>
           {todo.title}
         </p>
-        {todo.due_date && (
-          <p className="text-xs text-muted">
-            Due {formatDate(todo.due_date)}
-          </p>
+        {due && (
+          <span className={clsx('mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-medium', TONE_STYLES[due.tone])}>
+            {due.label}
+          </span>
         )}
       </div>
 
