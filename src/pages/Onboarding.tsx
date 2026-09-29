@@ -67,12 +67,15 @@ export function Onboarding() {
         {mode === 'create' && (
           <div className="mt-6 space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-muted">Household name</label>
+              <label htmlFor="household-name" className="mb-1.5 block text-sm font-medium text-muted">
+                Household name
+              </label>
               <input
+                id="household-name"
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-xl border border-border bg-surface2 px-3.5 py-2.5 text-ink outline-none ring-moss-400 focus:ring-2"
+                className="w-full rounded-xl border border-border bg-surface2 px-3.5 py-2.5 text-ink outline-none ring-sky-400 focus:ring-2"
               />
             </div>
             {error && <p className="text-sm text-clay-600">{error}</p>}
@@ -92,13 +95,16 @@ export function Onboarding() {
         {mode === 'join' && (
           <div className="mt-6 space-y-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-muted">Invite code</label>
+              <label htmlFor="invite-code" className="mb-1.5 block text-sm font-medium text-muted">
+                Invite code
+              </label>
               <input
+                id="invite-code"
                 autoFocus
                 value={code}
                 onChange={(e) => setCode(e.target.value.toUpperCase())}
                 placeholder="ABC123"
-                className="w-full rounded-xl border border-border bg-surface2 px-3.5 py-2.5 text-center font-mono text-lg tracking-widest text-ink outline-none ring-moss-400 focus:ring-2"
+                className="w-full rounded-xl border border-border bg-surface2 px-3.5 py-2.5 text-center font-mono text-lg tracking-widest text-ink outline-none ring-sky-400 focus:ring-2"
                 maxLength={6}
               />
             </div>
