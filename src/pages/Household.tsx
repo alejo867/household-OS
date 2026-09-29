@@ -55,7 +55,7 @@ export function HouseholdPage() {
       <section className="mt-8 rounded-3xl border border-dashed border-border bg-surface/60 p-6">
         <h2 className="font-medium text-ink">Invite someone</h2>
         <p className="mt-1 text-sm text-muted">
-          Generate a code and send it to them. They'll sign in with Google and enter it to join {household?.name}.
+          Generate a code and send it to them. They'll create an account and enter it to join {household?.name}.
         </p>
 
         {code ? (
