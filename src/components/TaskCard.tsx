@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import { Check, MoreHorizontal, Trash2 } from 'lucide-react'
 import { useState } from 'react'
-import { dueLabel, TONE_STYLES } from '@/lib/date'
+import { dueLabel, lastDoneLabel, TONE_STYLES } from '@/lib/date'
 import { TASK_CATEGORIES } from '@/lib/types'
 import type { RecurringTask } from '@/lib/types'
 import { CATEGORY_STYLES } from '@/lib/colors'
@@ -41,6 +41,7 @@ export function TaskCard({
         <div className="mt-1 flex flex-wrap items-center gap-2">
           <span className={clsx('rounded-full px-2 py-0.5 text-xs font-medium', TONE_STYLES[tone])}>{label}</span>
           <span className="text-xs text-muted">every {task.interval_days}d</span>
+          <span className="text-xs text-muted">· {lastDoneLabel(task.last_completed_at)}</span>
         </div>
       </div>
 
