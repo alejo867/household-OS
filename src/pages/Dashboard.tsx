@@ -3,12 +3,13 @@ import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/lib/useAuth'
 import { useHousehold } from '@/lib/useHousehold'
-import type { RecurringTask, Todo } from '@/lib/types'
+import type { RecurringTask, Todo, PantryItem } from '@/lib/types'
 import { TaskCard } from '@/components/TaskCard'
 import { TodoRow } from '@/components/TodoRow'
+import { PantryRow } from '@/components/PantryRow'
 import { EmptyState } from '@/components/EmptyState'
 import { Avatar } from '@/components/Avatar'
-import { AlertTriangle, Sparkles } from 'lucide-react'
+import { AlertTriangle, Sparkles, Refrigerator } from 'lucide-react'
 
 function greeting() {
   const h = new Date().getHours()
@@ -23,12 +24,13 @@ export function Dashboard() {
   const { household, members } = useHousehold()
   const [tasks, setTasks] = useState<RecurringTask[]>([])
   const [todos, setTodos] = useState<Todo[]>([])
+  const [pantry, setPantry] = useState<PantryItem[]>([])
   const [loading, setLoading] = useState(true)
 
   const load = useCallback(async () => {
     if (!household) return
     setLoading(true)
-    const [{ data: t }, { data: d }] = await Promise.all([
+    const [{ data: t }, { data: d }, { data: p }] = await Promise.all([
       supabase
         .from('recurring_tasks')
         .select('*')
@@ -40,10 +42,12 @@ export function Dashboard() {
         .select('*')
         .eq('household_id', household.id)
         .eq('is_done', false)
-        .order('due_date', { ascending: true, nullsFirst: false })
+        .order('due_date', { ascending: true, nullsFirst: false }),
+      supabase.from('pantry_items').select('*').eq('household_id', household.id).order('expires_on', { ascending: true })
     ])
     setTasks((t as RecurringTask[]) ?? [])
     setTodos((d as Todo[]) ?? [])
+    setPantry((p as PantryItem[]) ?? [])
     setLoading(false)
   }, [household])
 
@@ -61,6 +65,9 @@ export function Dashboard() {
   })
   const needsAttention = [...overdue, ...dueSoon].slice(0, 5)
   const todaysTodos = todos.slice(0, 5)
+  const expiringPantry = pantry
+    .filter((p) => (new Date(p.expires_on).getTime() - now.getTime()) / 86400000 <= 3)
+    .slice(0, 3)
 
   const completeTask = async (id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id))
@@ -81,6 +88,11 @@ export function Dashboard() {
   const deleteTodo = async (id: string) => {
     setTodos((prev) => prev.filter((t) => t.id !== id))
     await supabase.from('todos').delete().eq('id', id)
+  }
+
+  const deletePantryItem = async (id: string) => {
+    setPantry((prev) => prev.filter((p) => p.id !== id))
+    await supabase.from('pantry_items').delete().eq('id', id)
   }
 
   const firstName = (profile?.display_name || '').split(' ')[0]
@@ -157,6 +169,23 @@ export function Dashboard() {
           </Link>
         )}
       </section>
+
+      {expiringPantry.length > 0 && (
+        <section>
+          <div className="mb-3 flex items-center gap-2">
+            <Refrigerator size={16} className="text-sky-500" />
+            <h2 className="font-medium text-ink">Expiring soon</h2>
+          </div>
+          <div className="space-y-2.5">
+            {expiringPantry.map((p) => (
+              <PantryRow key={p.id} item={p} onDelete={deletePantryItem} />
+            ))}
+          </div>
+          <Link to="/tasks" className="mt-3 inline-block text-sm font-medium text-moss-600 hover:underline">
+            View pantry →
+          </Link>
+        </section>
+      )}
     </div>
   )
 }
