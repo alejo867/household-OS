@@ -63,7 +63,7 @@ export function Dashboard() {
     const days = (new Date(t.next_due_at).getTime() - now.getTime()) / 86400000
     return days >= 0 && days <= 7
   })
-  const needsAttention = [...overdue, ...dueSoon].slice(0, 5)
+  const needsAttention = [...overdue, ...dueSoon].slice(0, 3)
   const todaysTodos = todos.slice(0, 5)
   const expiringPantry = pantry
     .filter((p) => (new Date(p.expires_on).getTime() - now.getTime()) / 86400000 <= 3)
@@ -132,26 +132,6 @@ export function Dashboard() {
 
       <section>
         <div className="mb-3 flex items-center gap-2">
-          <AlertTriangle size={16} className="text-clay-500" />
-          <h2 className="font-medium text-ink">Needs attention</h2>
-        </div>
-        {!loading && needsAttention.length === 0 && (
-          <EmptyState icon="✨" title="All caught up" subtitle="Nothing's due around the house right now." />
-        )}
-        <div className="space-y-2.5">
-          {needsAttention.map((t) => (
-            <TaskCard key={t.id} task={t} assigneeName={nameFor(t.assigned_to)} onComplete={completeTask} onDelete={deleteTask} />
-          ))}
-        </div>
-        {tasks.length > 0 && (
-          <Link to="/tasks" className="mt-3 inline-block text-sm font-medium text-moss-600 hover:underline">
-            View all tasks →
-          </Link>
-        )}
-      </section>
-
-      <section>
-        <div className="mb-3 flex items-center gap-2">
           <Sparkles size={16} className="text-moss-500" />
           <h2 className="font-medium text-ink">Todos</h2>
         </div>
@@ -166,6 +146,26 @@ export function Dashboard() {
         {todos.length > 0 && (
           <Link to="/todos" className="mt-3 inline-block text-sm font-medium text-moss-600 hover:underline">
             View all todos →
+          </Link>
+        )}
+      </section>
+
+      <section>
+        <div className="mb-3 flex items-center gap-2">
+          <AlertTriangle size={16} className="text-clay-500" />
+          <h2 className="font-medium text-ink">Needs attention</h2>
+        </div>
+        {!loading && needsAttention.length === 0 && (
+          <EmptyState icon="✨" title="All caught up" subtitle="Nothing's due around the house right now." />
+        )}
+        <div className="space-y-2">
+          {needsAttention.map((t) => (
+            <TaskCard key={t.id} task={t} assigneeName={nameFor(t.assigned_to)} onComplete={completeTask} onDelete={deleteTask} compact />
+          ))}
+        </div>
+        {tasks.length > 0 && (
+          <Link to="/tasks" className="mt-3 inline-block text-sm font-medium text-moss-600 hover:underline">
+            View all tasks →
           </Link>
         )}
       </section>
