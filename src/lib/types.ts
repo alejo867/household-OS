@@ -62,3 +62,16 @@ export const TASK_CATEGORIES = [
 ] as const
 
 export type CategoryColor = (typeof TASK_CATEGORIES)[number]['color']
+
+export type PantryItem = {
+  id: string
+  household_id: string
+  name: string
+  icon: string
+  expires_on: string
+  notes: string | null
+  created_by: string | null
+  created_at: string
+}
+
+export const PANTRY_ICONS = ['🥛', '🥚', '🧀', '🍞', '🥦', '🍗', '🧴', '🍽️'] as const
